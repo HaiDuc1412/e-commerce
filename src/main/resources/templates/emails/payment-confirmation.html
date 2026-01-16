@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Confirmation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header p {
+            margin: 10px 0 0;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .success-box {
+            background: linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%);
+            border-radius: 10px;
+            padding: 25px;
+            margin: 20px 0;
+            text-align: center;
+        }
+        .success-box h2 {
+            margin: 0 0 10px 0;
+            color: #155724;
+            font-size: 24px;
+        }
+        .success-box .amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: #155724;
+            margin: 15px 0;
+        }
+        .order-info {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            border-left: 4px solid #11998e;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #666;
+        }
+        .info-value {
+            color: #333;
+        }
+        .next-steps {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .next-steps h3 {
+            margin-top: 0;
+            color: #856404;
+        }
+        .next-steps ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .next-steps li {
+            margin: 8px 0;
+            color: #856404;
+        }
+        .button {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            margin: 20px 0;
+            font-weight: 600;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #11998e;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Thanh Toán Thành Công!</h1>
+            <p>Chúng tôi đã nhận được thanh toán của bạn</p>
+        </div>
+        
+        <div class="content">
+            <p class="greeting">Chào <strong th:text="${customerName}">Customer</strong>,</p>
+            
+            <p>Cảm ơn bạn! Chúng tôi đã xác nhận thanh toán cho đơn hàng của bạn.</p>
+            
+            <div class="success-box">
+                <h2>Số Tiền Đã Thanh Toán</h2>
+                <div class="amount" th:text="${#numbers.formatDecimal(totalAmount, 1, 'COMMA', 0, 'POINT')} + ' đ'">1,500,000 đ</div>
+                <p style="margin: 0; color: #155724; font-weight: 600;">Thanh toán đã được xác nhận</p>
+            </div>
+            
+            <div class="order-info">
+                <h3 style="margin-top: 0; color: #11998e;">Chi Tiết Thanh Toán</h3>
+                <div class="info-row">
+                    <span class="info-label">Mã đơn hàng:</span>
+                    <span class="info-value" th:text="${orderNumber}">ORD-001</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Mã tracking:</span>
+                    <span class="info-value" th:text="${trackingCode}">TRK-001</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Phương thức thanh toán:</span>
+                    <span class="info-value" th:text="${paymentMethod}">BANK_TRANSFER</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Thời gian thanh toán:</span>
+                    <span class="info-value" th:text="${#temporals.format(orderDate, 'dd/MM/yyyy HH:mm')}">15/01/2026 10:00</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Trạng thái đơn hàng:</span>
+                    <span class="info-value" style="color: #28a745; font-weight: 600;">ĐÃ THANH TOÁN</span>
+                </div>
+            </div>
+            
+            <div class="next-steps">
+                <h3>Bước Tiếp Theo</h3>
+                <ul>
+                    <li>Đơn hàng của bạn đang được chuẩn bị</li>
+                    <li>Chúng tôi sẽ thông báo khi đơn hàng bắt đầu vận chuyển</li>
+                    <li>Dự kiến giao hàng trong vòng 2-3 ngày làm việc</li>
+                    <li>Bạn có thể theo dõi trạng thái đơn hàng bất cứ lúc nào</li>
+                </ul>
+            </div>
+            
+            <div style="text-align: center;">
+                <a th:href="${trackingUrl}" class="button">
+                    Theo Dõi Đơn Hàng
+                </a>
+            </div>
+            
+            <div style="background: #e7f3ff; border-left: 4px solid #2196F3; padding: 15px; margin-top: 20px; border-radius: 5px;">
+                <p style="margin: 0; color: #0d47a1;">
+                    <strong>Lưu ý:</strong> Email này xác nhận rằng chúng tôi đã nhận được thanh toán của bạn. Hóa đơn chi tiết sẽ được gửi kèm theo đơn hàng khi giao hàng.
+                </p>
+            </div>
+            
+            <p style="margin-top: 30px; color: #666; font-size: 14px;">
+                Link theo dõi đơn hàng: 
+                <a th:href="${trackingUrl}" th:text="${trackingUrl}" style="color: #11998e; word-break: break-all;">tracking-url</a>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>
+                Cảm ơn bạn đã tin tưởng <strong>Hung Hypebeast</strong>!<br/>
+                Nếu có bất kỳ thắc mắc nào về thanh toán, vui lòng liên hệ: <a href="mailto:support@hunghypebeast.com">support@hunghypebeast.com</a>
+            </p>
+            <p style="margin-top: 15px; color: #999;">
+                © 2026 Hung Hypebeast. All rights reserved.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

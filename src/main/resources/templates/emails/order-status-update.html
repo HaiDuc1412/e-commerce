@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Status Update</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 600;
+        }
+        .header p {
+            margin: 10px 0 0;
+            font-size: 16px;
+            opacity: 0.9;
+        }
+        .content {
+            padding: 30px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .status-box {
+            background: #f8f9fa;
+            border-left: 4px solid #4facfe;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+            text-align: center;
+        }
+        .status-box h2 {
+            margin: 0 0 15px 0;
+            color: #4facfe;
+            font-size: 20px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 10px 25px;
+            background: #28a745;
+            color: white;
+            border-radius: 25px;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 10px 0;
+        }
+        .status-badge.shipping {
+            background: #ffc107;
+            color: #333;
+        }
+        .status-badge.delivered {
+            background: #28a745;
+        }
+        .status-badge.cancelled {
+            background: #dc3545;
+        }
+        .order-info {
+            background: #f8f9fa;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-weight: 600;
+            color: #666;
+        }
+        .info-value {
+            color: #333;
+        }
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+            margin: 30px 0;
+        }
+        .timeline-item {
+            position: relative;
+            padding-bottom: 20px;
+        }
+        .timeline-item:before {
+            content: '';
+            position: absolute;
+            left: -23px;
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #4facfe;
+            border: 3px solid #fff;
+            box-shadow: 0 0 0 2px #4facfe;
+        }
+        .timeline-item.active:before {
+            background: #28a745;
+            box-shadow: 0 0 0 2px #28a745;
+        }
+        .timeline-item:after {
+            content: '';
+            position: absolute;
+            left: -18px;
+            top: 18px;
+            width: 2px;
+            height: calc(100% - 5px);
+            background: #e0e0e0;
+        }
+        .timeline-item:last-child:after {
+            display: none;
+        }
+        .button {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            margin: 20px 0;
+            font-weight: 600;
+            text-align: center;
+            transition: transform 0.2s;
+        }
+        .button:hover {
+            transform: translateY(-2px);
+        }
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+        .footer a {
+            color: #4facfe;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Cập Nhật Trạng Thái Đơn Hàng</h1>
+            <p>Đơn hàng của bạn có thay đổi</p>
+        </div>
+        
+        <div class="content">
+            <p class="greeting">Chào <strong th:text="${customerName}">Customer</strong>,</p>
+            
+            <p>Trạng thái đơn hàng của bạn đã được cập nhật.</p>
+            
+            <div class="status-box">
+                <h2>Trạng Thái Mới</h2>
+                <span 
+                    class="status-badge" 
+                    th:classappend="${orderStatus == 'SHIPPING'} ? 'shipping' : (${orderStatus == 'DELIVERED'} ? 'delivered' : (${orderStatus == 'CANCELLED'} ? 'cancelled' : ''))"
+                    th:text="${orderStatus}">
+                    SHIPPING
+                </span>
+            </div>
+            
+            <div class="order-info">
+                <h3 style="margin-top: 0; color: #4facfe;">📋 Thông Tin Đơn Hàng</h3>
+                <div class="info-row">
+                    <span class="info-label">Mã đơn hàng:</span>
+                    <span class="info-value" th:text="${orderNumber}">ORD-001</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Mã tracking:</span>
+                    <span class="info-value" th:text="${trackingCode}">TRK-001</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Tổng tiền:</span>
+                    <span class="info-value" th:text="${#numbers.formatDecimal(totalAmount, 1, 'COMMA', 0, 'POINT')} + ' đ'">1,500,000 đ</span>
+                </div>
+            </div>
+            
+            <h3>Tiến Trình Đơn Hàng</h3>
+            <div class="timeline">
+                <div class="timeline-item active">
+                    <strong>Đã xác nhận</strong><br/>
+                    <small style="color: #666;">Đơn hàng đã được xác nhận</small>
+                </div>
+                <div class="timeline-item" th:classappend="${orderStatus == 'PAID' or orderStatus == 'SHIPPING' or orderStatus == 'DELIVERED'} ? 'active' : ''">
+                    <strong>Đã thanh toán</strong><br/>
+                    <small style="color: #666;">Thanh toán đã được xác nhận</small>
+                </div>
+                <div class="timeline-item" th:classappend="${orderStatus == 'SHIPPING' or orderStatus == 'DELIVERED'} ? 'active' : ''">
+                    <strong>Đang giao hàng</strong><br/>
+                    <small style="color: #666;">Đơn hàng đang trên đường giao đến bạn</small>
+                </div>
+                <div class="timeline-item" th:classappend="${orderStatus == 'DELIVERED'} ? 'active' : ''">
+                    <strong>Đã giao hàng</strong><br/>
+                    <small style="color: #666;">Đơn hàng đã được giao thành công</small>
+                </div>
+            </div>
+            
+            <div style="text-align: center;">
+                <a th:href="${trackingUrl}" class="button">
+                    Xem Chi Tiết Đơn Hàng
+                </a>
+            </div>
+            
+            <p style="margin-top: 30px; color: #666; font-size: 14px;">
+                Bạn có thể theo dõi trạng thái đơn hàng chi tiết tại: 
+                <a th:href="${trackingUrl}" th:text="${trackingUrl}" style="color: #4facfe; word-break: break-all;">tracking-url</a>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>
+                Cảm ơn bạn đã mua sắm tại <strong>Hung Hypebeast</strong>!<br/>
+                Nếu có bất kỳ thắc mắc nào, vui lòng liên hệ: <a href="mailto:support@hunghypebeast.com">support@hunghypebeast.com</a>
+            </p>
+            <p style="margin-top: 15px; color: #999;">
+                © 2026 Hung Hypebeast. All rights reserved.
+            </p>
+        </div>
+    </div>
+</body>
+</html>

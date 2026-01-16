@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 1px solid #ddd;
+        }
+        .header {
+            background: #2c3e50;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .content {
+            padding: 30px;
+        }
+        .order-info {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .order-info h2 {
+            margin-top: 0;
+            font-size: 16px;
+            color: #333;
+        }
+        .info-row {
+            padding: 8px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        .info-label {
+            font-weight: bold;
+            display: inline-block;
+            width: 150px;
+        }
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        .items-table th {
+            background: #f0f0f0;
+            padding: 10px;
+            text-align: left;
+            border: 1px solid #ddd;
+        }
+        .items-table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+        }
+        .total-row {
+            background: #f9f9f9;
+            font-weight: bold;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 30px;
+            background: #2c3e50;
+            color: white;
+            text-decoration: none;
+            margin: 20px 0;
+        }
+        .shipping-info {
+            background: #f9f9f9;
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .shipping-info h3 {
+            margin-top: 0;
+            font-size: 16px;
+        }
+        .footer {
+            background: #f0f0f0;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 13px;
+            border-top: 1px solid #ddd;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Xác Nhận Đơn Hàng</h1>
+        </div>
+        
+        <div class="content">
+            <p>Chào <strong th:text="${customerName}">Customer</strong>,</p>
+            
+            <p>Cảm ơn bạn đã đặt hàng. Đơn hàng của bạn đã được tiếp nhận và đang được xử lý.</p>
+            
+            <div class="order-info">
+                <h2>Thông Tin Đơn Hàng</h2>
+                <div class="info-row">
+                    <span class="info-label">Mã đơn hàng:</span>
+                    <span th:text="${orderNumber}">ORD-001</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Mã tracking:</span>
+                    <span th:text="${trackingCode}">TRK-001</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Ngày đặt:</span>
+                    <span th:text="${#temporals.format(orderDate, 'dd/MM/yyyy HH:mm')}">15/01/2026 10:00</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Trạng thái:</span>
+                    <span th:text="${orderStatus}">CONFIRMED</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Thanh toán:</span>
+                    <span th:text="${paymentMethod}">COD</span>
+                </div>
+            </div>
+            
+            <h3>Sản Phẩm</h3>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th>Tên sản phẩm</th>
+                        <th style="text-align: center;">SL</th>
+                        <th style="text-align: right;">Đơn giá</th>
+                        <th style="text-align: right;">Thành tiền</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="item : ${orderItems}">
+                        <td>
+                            <strong th:text="${item.productName}">Product Name</strong><br/>
+                            <small th:text="'Size: ' + ${item.size} + ' | Color: ' + ${item.color}">Size: M | Color: Black</small>
+                        </td>
+                        <td style="text-align: center;" th:text="${item.quantity}">1</td>
+                        <td style="text-align: right;" th:text="${#numbers.formatDecimal(item.price, 1, 'COMMA', 0, 'POINT')} + ' đ'">500,000 đ</td>
+                        <td style="text-align: right;" th:text="${#numbers.formatDecimal(item.subtotal, 1, 'COMMA', 0, 'POINT')} + ' đ'">500,000 đ</td>
+                    </tr>
+                    <tr class="total-row">
+                        <td colspan="3" style="text-align: right;">Tổng cộng:</td>
+                        <td style="text-align: right;" th:text="${#numbers.formatDecimal(totalAmount, 1, 'COMMA', 0, 'POINT')} + ' đ'">1,500,000 đ</td>
+                    </tr>
+                </tbody>
+            </table>
+            
+            <div class="shipping-info">
+                <h3>Địa Chỉ Giao Hàng</h3>
+                <p>
+                    <strong th:text="${customerName}">Nguyễn Văn A</strong><br/>
+                    <span th:text="${customerPhone}">0901234567</span><br/>
+                    <span th:text="${shippingAddress}">123 Đường ABC, Quận 1, TP.HCM</span>
+                </p>
+            </div>
+            
+            <div style="text-align: center;">
+                <a th:href="${trackingUrl}" class="button">
+                    Theo Dõi Đơn Hàng
+                </a>
+            </div>
+            
+            <p style="margin-top: 20px; font-size: 13px; color: #666;">
+                Bạn có thể theo dõi đơn hàng tại: <a th:href="${trackingUrl}" th:text="${trackingUrl}">tracking-url</a>
+            </p>
+        </div>
+        
+        <div class="footer">
+            <p>
+                Cảm ơn bạn đã mua hàng!<br/>
+                Email: support@hunghypebeast.com
+            </p>
+            <p style="margin-top: 10px;">
+                © 2026 Hung Hypebeast
+            </p>
+        </div>
+    </div>
+</body>
+</html>
