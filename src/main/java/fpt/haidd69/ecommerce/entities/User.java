@@ -35,7 +35,7 @@ public class User extends BaseEntity {
     private String email;
 
     @Column(nullable = false)
-    private String password; // BCrypt hashed
+    private String password;
 
     @Column(nullable = false, length = 100)
     private String fullName;

@@ -51,11 +51,9 @@ public class Order extends BaseEntity {
     @Column(unique = true, nullable = false)
     private String trackingCode;
 
-    // Session ID for guest users to link with inventory reservations
     @Column(name = "session_id")
     private String sessionId;
 
-    // Optional: link to user if customer is logged in
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;

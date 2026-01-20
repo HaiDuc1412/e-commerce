@@ -2,8 +2,6 @@ package fpt.haidd69.ecommerce.entities;
 
 import java.math.BigDecimal;
 
-import lombok.*;
-
 import fpt.haidd69.ecommerce.enums.Color;
 import fpt.haidd69.ecommerce.enums.Size;
 import jakarta.persistence.Column;
@@ -15,6 +13,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "product_variants",
@@ -35,7 +39,7 @@ public class ProductVariant extends BaseEntity {
     private String sku;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
+    @Column(nullable = true)
     private Size size;
 
     @Enumerated(EnumType.STRING)

@@ -3,8 +3,6 @@ package fpt.haidd69.ecommerce.entities;
 import java.util.ArrayList;
 import java.util.List;
 
-import lombok.*;
-
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -12,6 +10,12 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "carts")
@@ -23,11 +27,9 @@ import jakarta.persistence.Table;
 @Builder
 public class Cart extends BaseEntity {
 
-    // Session-based cart cho guest users (không đăng nhập)
     @Column(unique = true)
     private String sessionId;
 
-    // User-based cart cho logged-in users
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;

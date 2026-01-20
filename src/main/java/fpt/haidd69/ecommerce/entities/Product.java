@@ -4,17 +4,21 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
-import lombok.*;
-
-import fpt.haidd69.ecommerce.enums.ProductCategory;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 /**
  * Product entity representing sellable products. Includes indexes on category
@@ -22,7 +26,7 @@ import jakarta.persistence.Table;
  */
 @Entity
 @Table(name = "products", indexes = {
-    @Index(name = "idx_product_category", columnList = "category"),
+    @Index(name = "idx_product_category", columnList = "category_id"),
     @Index(name = "idx_product_active", columnList = "active"),
     @Index(name = "idx_product_name", columnList = "name")
 })
@@ -40,9 +44,9 @@ public class Product extends BaseEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private ProductCategory category;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id", nullable = false)
+    private Category category;
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal basePrice;
