@@ -1,10 +1,10 @@
 package fpt.haidd69.ecommerce.config;
 
 import io.swagger.v3.oas.annotations.OpenAPIDefinition;
+import io.swagger.v3.oas.annotations.enums.SecuritySchemeIn;
 import io.swagger.v3.oas.annotations.enums.SecuritySchemeType;
 import io.swagger.v3.oas.annotations.info.Contact;
 import io.swagger.v3.oas.annotations.info.Info;
-import io.swagger.v3.oas.annotations.info.License;
 import io.swagger.v3.oas.annotations.security.SecurityScheme;
 import io.swagger.v3.oas.annotations.servers.Server;
 
@@ -13,12 +13,12 @@ import io.swagger.v3.oas.annotations.servers.Server;
  */
 @OpenAPIDefinition(
         info = @Info(
-                title = "Hung Hypebeast E-commerce API",
+                title = "E-commerce API",
                 version = "1.0.0",
                 description = """
                 ## E-Commerce Backend REST API
                 
-                Backend API cho hệ thống e-commerce "Hung Hypebeast" - Local Brand Fashion Store.
+                Backend API cho hệ thống e-commerce "Local Brand Fashion Store".
                 
                 ### Features
                 - Product Catalog với filter và pagination
@@ -32,20 +32,10 @@ import io.swagger.v3.oas.annotations.servers.Server;
                 - Most endpoints are public (Product, Cart, Order Tracking)
                 - Admin endpoints require JWT Bearer token
                 - Use `/api/auth/login` to get token
-                
-                ### Session Management
-                - Cart operations require `Session-Id` header
-                - Generate a unique session ID (UUID) for each customer
-                - Example: `Session-Id: 550e8400-e29b-41d4-a716-446655440000`
+        
                 """,
                 contact = @Contact(
-                        name = "Anh Phuong",
-                        email = "support@hunghypebeast.com",
-                        url = "https://github.com/your-repo"
-                ),
-                license = @License(
-                        name = "MIT License",
-                        url = "https://opensource.org/licenses/MIT"
+                        name = "HaiDD69"
                 )
         ),
         servers = {
@@ -57,6 +47,7 @@ import io.swagger.v3.oas.annotations.servers.Server;
         type = SecuritySchemeType.HTTP,
         scheme = "bearer",
         bearerFormat = "JWT",
+        in = SecuritySchemeIn.HEADER,
         description = """
             Enter your JWT token. 
             
@@ -66,6 +57,8 @@ import io.swagger.v3.oas.annotations.servers.Server;
             3. Copy the `token` from response
             4. Click 'Authorize' button above
             5. Enter token (without 'Bearer ' prefix)
+            
+            The token will be sent in Authorization header as: Bearer {token}
             """
 )
 public class OpenAPIConfig {

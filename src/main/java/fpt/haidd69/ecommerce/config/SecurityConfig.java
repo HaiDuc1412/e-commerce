@@ -122,19 +122,13 @@ public class SecurityConfig {
                     .authenticationProvider(authenticationProvider())
                     .addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class)
                     .authorizeHttpRequests(auth -> auth
-                    // Public endpoints
                     .requestMatchers(PUBLIC_ENDPOINTS).permitAll()
-                    // Public GET for products
                     .requestMatchers(HttpMethod.GET, "/api/products/**").permitAll()
-                    // Guest can use cart with Session-Id
                     .requestMatchers("/api/cart/**").permitAll()
-                    // Guest checkout
                     .requestMatchers(HttpMethod.POST, "/api/orders").permitAll()
-                    // Public tracking
                     .requestMatchers(HttpMethod.GET, "/api/orders/track/**").permitAll()
-                    // Admin endpoints - only ADMIN role
+                    .requestMatchers(HttpMethod.POST, "/api/orders/*/update-status").hasRole("ADMIN")
                     .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                    // All other requests require authentication
                     .anyRequest().authenticated());
 
             return http.build();

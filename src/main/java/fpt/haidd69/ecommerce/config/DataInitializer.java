@@ -9,13 +9,14 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
+import fpt.haidd69.ecommerce.entities.Category;
 import fpt.haidd69.ecommerce.entities.Product;
 import fpt.haidd69.ecommerce.entities.ProductVariant;
 import fpt.haidd69.ecommerce.entities.User;
 import fpt.haidd69.ecommerce.enums.Color;
-import fpt.haidd69.ecommerce.enums.ProductCategory;
 import fpt.haidd69.ecommerce.enums.Role;
 import fpt.haidd69.ecommerce.enums.Size;
+import fpt.haidd69.ecommerce.repositories.CategoryRepository;
 import fpt.haidd69.ecommerce.repositories.ProductRepository;
 import fpt.haidd69.ecommerce.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -31,21 +32,24 @@ import lombok.extern.slf4j.Slf4j;
 public class DataInitializer {
 
     private final UserRepository userRepository;
+    private final CategoryRepository categoryRepository;
     private final ProductRepository productRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @Value("${app.init.admin.password:ChangeMe123!@#}")
+    @Value("${app.init.admin.password:Admin@123}")
     private String adminPassword;
 
-    @Value("${app.init.customer.password:ChangeMe456!@#}")
+    @Value("${app.init.customer.password:Customer@123}")
     private String customerPassword;
 
     @Bean
     @SuppressWarnings("unused")
     CommandLineRunner initDatabase() {
         return args -> {
+            log.info("=== Starting database initialization ===");
             initUsers();
-            initProducts();
+            initProductCatalog();
+            log.info("=== Database initialization completed ===");
         };
     }
 
@@ -88,149 +92,190 @@ public class DataInitializer {
     }
 
     /**
-     * Initialize default products for the e-commerce store
+     * Initialize product catalog with categories and products
      */
-    private void initProducts() {
-        if (productRepository.count() == 0) {
-            // T-Shirts (5 products)
-            createProduct("Classic T-Shirt", "Comfortable cotton t-shirt for everyday wear",
-                    ProductCategory.T_SHIRT, new BigDecimal("299000"));
-
-            createProduct("Graphic T-Shirt", "Trendy graphic design t-shirt",
-                    ProductCategory.T_SHIRT, new BigDecimal("349000"));
-
-            createProduct("V-Neck T-Shirt", "Stylish v-neck cotton t-shirt",
-                    ProductCategory.T_SHIRT, new BigDecimal("329000"));
-
-            createProduct("Polo T-Shirt", "Classic polo style t-shirt",
-                    ProductCategory.T_SHIRT, new BigDecimal("399000"));
-
-            createProduct("Striped T-Shirt", "Casual striped pattern t-shirt",
-                    ProductCategory.T_SHIRT, new BigDecimal("359000"));
-
-            // Hoodies (4 products)
-            createProduct("Premium Hoodie", "Warm and stylish hoodie with fleece lining",
-                    ProductCategory.HOODIE, new BigDecimal("599000"));
-
-            createProduct("Zip Hoodie", "Comfortable zip-up hoodie",
-                    ProductCategory.HOODIE, new BigDecimal("649000"));
-
-            createProduct("Oversized Hoodie", "Trendy oversized fit hoodie",
-                    ProductCategory.HOODIE, new BigDecimal("699000"));
-
-            createProduct("Sports Hoodie", "Athletic hoodie for active lifestyle",
-                    ProductCategory.HOODIE, new BigDecimal("579000"));
-
-            // Jackets (4 products)
-            createProduct("Denim Jacket", "Classic blue denim jacket",
-                    ProductCategory.JACKET, new BigDecimal("899000"));
-
-            createProduct("Leather Jacket", "Premium leather jacket",
-                    ProductCategory.JACKET, new BigDecimal("1499000"));
-
-            createProduct("Bomber Jacket", "Stylish bomber jacket",
-                    ProductCategory.JACKET, new BigDecimal("799000"));
-
-            createProduct("Windbreaker Jacket", "Lightweight windbreaker",
-                    ProductCategory.JACKET, new BigDecimal("699000"));
-
-            // Pants (4 products)
-            createProduct("Casual Pants", "Comfortable everyday pants",
-                    ProductCategory.PANTS, new BigDecimal("499000"));
-
-            createProduct("Denim Jeans", "Classic blue denim jeans",
-                    ProductCategory.PANTS, new BigDecimal("599000"));
-
-            createProduct("Cargo Pants", "Multi-pocket cargo pants",
-                    ProductCategory.PANTS, new BigDecimal("549000"));
-
-            createProduct("Chino Pants", "Smart casual chino pants",
-                    ProductCategory.PANTS, new BigDecimal("529000"));
-
-            // Accessories (5 products)
-            createProduct("Baseball Cap", "Adjustable baseball cap",
-                    ProductCategory.ACCESSORIES, new BigDecimal("199000"));
-
-            createProduct("Beanie Hat", "Warm winter beanie",
-                    ProductCategory.ACCESSORIES, new BigDecimal("149000"));
-
-            createProduct("Canvas Backpack", "Durable canvas backpack",
-                    ProductCategory.ACCESSORIES, new BigDecimal("399000"));
-
-            createProduct("Leather Belt", "Genuine leather belt",
-                    ProductCategory.ACCESSORIES, new BigDecimal("249000"));
-
-            createProduct("Sunglasses", "UV protection sunglasses",
-                    ProductCategory.ACCESSORIES, new BigDecimal("299000"));
-
-            log.info("Created {} default products", productRepository.count());
+    private void initProductCatalog() {
+        if (productRepository.count() > 0) {
+            log.info("Products already exist, skipping initialization");
+            return;
         }
+
+        log.info("Initializing product catalog...");
+
+        // Create and SAVE Categories first
+        Category tshirtCategory = saveCategory("Áo Thun", "Áo thun cotton cao cấp, form rộng thoải mái");
+        Category hoodieCategory = saveCategory("Hoodie", "Áo hoodie chất liệu nỉ bông ấm áp");
+        Category jacketCategory = saveCategory("Áo Khoác", "Áo khoác đa dạng kiểu dáng");
+
+        // Create T-Shirt Products
+        createProduct("Basic Tee - Essential",
+                "Áo thun basic trơn, chất liệu cotton 100%, form rộng oversized phù hợp mọi dáng người",
+                tshirtCategory,
+                new BigDecimal("199000"),
+                "https://product.hstatic.net/200000033444/product/1_f91fb0c1ad054e1da7d27c5cc5317b27_master.jpg",
+                new Color[]{Color.BLACK, Color.WHITE, Color.GRAY},
+                new Size[]{Size.M, Size.L, Size.XL, Size.XXL},
+                50);
+
+        createProduct("Graphic Tee - Street Culture",
+                "Áo thun in hình nghệ thuật đường phố, thiết kế độc đáo, limited edition",
+                tshirtCategory,
+                new BigDecimal("249000"),
+                "https://product.hstatic.net/200000033444/product/2_be7d6fa3e9c74889ace44c46c1b6e7a4_master.jpg",
+                new Color[]{Color.BLACK, Color.WHITE},
+                new Size[]{Size.M, Size.L, Size.XL},
+                30);
+
+        createProduct("Premium Tee - Heavyweight",
+                "Áo thun cao cấp vải dày dặn, form boxy, chất liệu cotton compact cao cấp",
+                tshirtCategory,
+                new BigDecimal("299000"),
+                "https://product.hstatic.net/200000033444/product/3_c5d4e8a9b6f74d2eb3f8c7a1d2e9f5b8_master.jpg",
+                new Color[]{Color.BLACK, Color.GRAY, Color.BLUE},
+                new Size[]{Size.L, Size.XL, Size.XXL},
+                40);
+
+        // Create Hoodie Products
+        createProduct("Classic Hoodie - Daily Wear",
+                "Hoodie nỉ bông basic, mũ to bản, túi kangaroo tiện dụng, giữ ấm tốt",
+                hoodieCategory,
+                new BigDecimal("399000"),
+                "https://product.hstatic.net/200000033444/product/hoodie1_master.jpg",
+                new Color[]{Color.BLACK, Color.GRAY, Color.BLUE},
+                new Size[]{Size.M, Size.L, Size.XL},
+                35);
+
+        createProduct("Premium Hoodie - Embroidered Logo",
+                "Hoodie cao cấp thêu logo nổi, chất nỉ bông dày dặn, form rộng thoải mái",
+                hoodieCategory,
+                new BigDecimal("499000"),
+                "https://product.hstatic.net/200000033444/product/hoodie2_master.jpg",
+                new Color[]{Color.BLACK, Color.WHITE},
+                new Size[]{Size.L, Size.XL, Size.XXL},
+                25);
+
+        createProduct("Oversized Hoodie - Unisex",
+                "Hoodie oversize phong cách Hàn Quốc, form rộng unisex, chất nỉ cao cấp",
+                hoodieCategory,
+                new BigDecimal("449000"),
+                "https://product.hstatic.net/200000033444/product/hoodie3_master.jpg",
+                new Color[]{Color.GRAY, Color.PINK, Color.BLUE},
+                new Size[]{Size.L, Size.XL},
+                20);
+
+        // Create Jacket Products
+        createProduct("Windbreaker Jacket - Lightweight",
+                "Áo khoác gió nhẹ, chống nước tốt, phù hợp mùa xuân hè",
+                jacketCategory,
+                new BigDecimal("549000"),
+                "https://product.hstatic.net/200000033444/product/jacket1_master.jpg",
+                new Color[]{Color.BLACK, Color.BLUE, Color.GREEN},
+                new Size[]{Size.M, Size.L, Size.XL},
+                30);
+
+        createProduct("Bomber Jacket - Classic Style",
+                "Áo bomber jacket phong cách cổ điển, chất liệu dù cao cấp, lót nỉ ấm",
+                jacketCategory,
+                new BigDecimal("699000"),
+                "https://product.hstatic.net/200000033444/product/jacket2_master.jpg",
+                new Color[]{Color.BLACK, Color.GREEN},
+                new Size[]{Size.L, Size.XL},
+                15);
+
+        createProduct("Denim Jacket - Vintage Wash",
+                "Áo khoác jean wash vintage, kiểu dáng oversized, chất jean dày dặn",
+                jacketCategory,
+                new BigDecimal("599000"),
+                "https://product.hstatic.net/200000033444/product/jacket3_master.jpg",
+                new Color[]{Color.BLUE, Color.BLACK},
+                new Size[]{Size.M, Size.L, Size.XL},
+                20);
+
+        createProduct("Coach Jacket - Minimal Design",
+                "Áo khoác coach jacket tối giản, nhẹ nhàng, phù hợp layering",
+                jacketCategory,
+                new BigDecimal("479000"),
+                "https://product.hstatic.net/200000033444/product/jacket4_master.jpg",
+                new Color[]{Color.BLACK, Color.GRAY, Color.YELLOW},
+                new Size[]{Size.M, Size.L, Size.XL, Size.XXL},
+                25);
+
+        log.info("✅ Created 10 products with multiple variants");
     }
 
-    private void createProduct(String name, String description, ProductCategory category, BigDecimal basePrice) {
+    private Category saveCategory(String name, String description) {
+        // Check if category already exists
+        return categoryRepository.findByName(name)
+                .orElseGet(() -> {
+                    Category category = Category.builder()
+                            .name(name)
+                            .description(description)
+                            .active(true)
+                            .build();
+
+                    Category saved = categoryRepository.save(category);
+                    log.info("Created category: {}", name);
+                    return saved;
+                });
+    }
+
+    private Category createCategory(String name, String description) {
+        Category category = Category.builder()
+                .name(name)
+                .description(description)
+                .active(true)
+                .build();
+
+        log.info("Created category: {}", name);
+        return category; // Will be saved with product
+    }
+
+    private void createProduct(String name, String description, Category category,
+            BigDecimal basePrice, String imageUrl,
+            Color[] colors, Size[] sizes, int stockPerVariant) {
+
         Product product = Product.builder()
                 .name(name)
                 .description(description)
                 .category(category)
                 .basePrice(basePrice)
-                .imageUrl("https://via.placeholder.com/500")
+                .imageUrl(imageUrl)
                 .active(true)
                 .variants(new ArrayList<>())
                 .build();
 
-        // Add variants for clothing items
-        if (category != ProductCategory.ACCESSORIES) {
-            // Add multiple color/size combinations
-            addVariant(product, Color.BLACK, Size.S, 30);
-            addVariant(product, Color.BLACK, Size.M, 50);
-            addVariant(product, Color.BLACK, Size.L, 50);
-            addVariant(product, Color.BLACK, Size.XL, 40);
-            addVariant(product, Color.BLACK, Size.XXL, 30);
+        // Create variants for each color-size combination
+        int variantCount = 0;
+        for (Color color : colors) {
+            for (Size size : sizes) {
+                String sku = generateSku(name, color, size);
+                ProductVariant variant = ProductVariant.builder()
+                        .product(product)
+                        .sku(sku)
+                        .size(size)
+                        .color(color)
+                        .price(basePrice) // Same price as base for simplicity
+                        .stockQuantity(stockPerVariant)
+                        .reservedQuantity(0)
+                        .active(true)
+                        .build();
 
-            addVariant(product, Color.WHITE, Size.S, 30);
-            addVariant(product, Color.WHITE, Size.M, 50);
-            addVariant(product, Color.WHITE, Size.L, 50);
-            addVariant(product, Color.WHITE, Size.XL, 40);
-            addVariant(product, Color.WHITE, Size.XXL, 30);
-
-            addVariant(product, Color.GRAY, Size.S, 25);
-            addVariant(product, Color.GRAY, Size.M, 40);
-            addVariant(product, Color.GRAY, Size.L, 40);
-            addVariant(product, Color.GRAY, Size.XL, 35);
-
-            addVariant(product, Color.BLUE, Size.M, 30);
-            addVariant(product, Color.BLUE, Size.L, 30);
-            addVariant(product, Color.BLUE, Size.XL, 25);
-
-            addVariant(product, Color.RED, Size.M, 25);
-            addVariant(product, Color.RED, Size.L, 25);
-        } else {
-            // Accessories with color variants only
-            addVariant(product, Color.BLACK, null, 100);
-            addVariant(product, Color.WHITE, null, 80);
-            addVariant(product, Color.GRAY, null, 70);
-            addVariant(product, Color.BLUE, null, 60);
-            addVariant(product, Color.RED, null, 50);
+                product.getVariants().add(variant);
+                variantCount++;
+            }
         }
 
         productRepository.save(product);
+        log.info("Created product: {} with {} variants", name, variantCount);
     }
 
-    private void addVariant(Product product, Color color, Size size, int stock) {
-        // Generate SKU: ProductName-Color-Size (e.g., "TSHIRT-BLACK-M")
-        String skuBase = product.getName().toUpperCase()
-                .replaceAll("[^A-Z0-9]", "")
-                .substring(0, Math.min(10, product.getName().replaceAll("[^A-Z0-9]", "").length()));
-        String sku = skuBase + "-" + color.name() + (size != null ? "-" + size.name() : "");
+    private String generateSku(String productName, Color color, Size size) {
+        // Generate SKU: BASIC-TEE-BLACK-M
+        String productCode = productName.toUpperCase()
+                .replaceAll("[^A-Z0-9\\s]", "")
+                .replaceAll("\\s+", "-")
+                .substring(0, Math.min(15, productName.length()));
 
-        ProductVariant variant = ProductVariant.builder()
-                .product(product)
-                .sku(sku)
-                .color(color)
-                .size(size)
-                .price(product.getBasePrice()) // Set price from product's basePrice
-                .stockQuantity(stock)
-                .build();
-        product.getVariants().add(variant);
+        return String.format("%s-%s-%s", productCode, color.name(), size.name());
     }
 }
