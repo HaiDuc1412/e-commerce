@@ -1,31 +1,23 @@
 package fpt.haidd69.ecommerce.constants;
 
-/**
- * Centralized error codes for consistent error handling across the application.
- * Format: MODULE_ERROR_TYPE
- */
 public final class ErrorCodes {
 
-    // General errors (1xxx)
     public static final String INTERNAL_SERVER_ERROR = "ERR_1000";
     public static final String VALIDATION_ERROR = "ERR_1001";
     public static final String INVALID_REQUEST = "ERR_1002";
 
-    // Authentication & Authorization errors (2xxx)
     public static final String UNAUTHORIZED = "ERR_2000";
     public static final String INVALID_CREDENTIALS = "ERR_2001";
     public static final String TOKEN_EXPIRED = "ERR_2002";
     public static final String TOKEN_INVALID = "ERR_2003";
     public static final String ACCESS_DENIED = "ERR_2004";
 
-    // Resource errors (3xxx)
     public static final String RESOURCE_NOT_FOUND = "ERR_3000";
     public static final String USER_NOT_FOUND = "ERR_3001";
     public static final String PRODUCT_NOT_FOUND = "ERR_3002";
     public static final String ORDER_NOT_FOUND = "ERR_3003";
     public static final String CART_NOT_FOUND = "ERR_3004";
 
-    // Business logic errors (4xxx)
     public static final String INSUFFICIENT_STOCK = "ERR_4000";
     public static final String INVALID_ORDER_STATUS = "ERR_4001";
     public static final String CART_EMPTY = "ERR_4002";

@@ -1,15 +1,16 @@
 package fpt.haidd69.ecommerce.mappers;
 
+import java.util.List;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
 import fpt.haidd69.ecommerce.dto.product.ProductResponse;
 import fpt.haidd69.ecommerce.dto.product.ProductVariantResponse;
+import fpt.haidd69.ecommerce.entities.Category;
 import fpt.haidd69.ecommerce.entities.Product;
 import fpt.haidd69.ecommerce.entities.ProductVariant;
-
-import java.util.List;
 
 @Mapper(componentModel = "spring")
 public interface ProductMapper {
@@ -25,8 +26,8 @@ public interface ProductMapper {
     List<ProductVariantResponse> toProductVariantResponseList(List<ProductVariant> variants);
 
     @Named("categoryToString")
-    default String categoryToString(fpt.haidd69.ecommerce.enums.ProductCategory category) {
-        return category != null ? category.name() : null;
+    default String categoryToString(Category category) {
+        return category != null ? category.getName() : null;
     }
 
     @Named("sizeToString")
