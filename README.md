@@ -98,18 +98,14 @@ Hệ thống E-commerce Backend (Headless/API-first) được xây dựng cho **
 - Java 21+
 - PostgreSQL 13+
 - Maven 3.8+
-- Docker & Docker Compose (optional)
 ### 1. Clone Repository
 ```bash
 git clone <repository-url>
 cd Ecommerce
 ```
 ### 2. Database Setup
-#### Option A: Using Docker Compose (Khuyến nghị)
-```bash
-docker-compose up -d
-```
-#### Option B: Manual PostgreSQL Setup
+
+#### Manual PostgreSQL Setup
 ```bash
 # Tạo database
 createdb ecommerce_db
@@ -153,7 +149,6 @@ EMAIL_FROM_NAME=Hung Hypebeast Store
 # Logging Level (optional)
 LOG_LEVEL=INFO
 ```
-**Cấu hình Email:** Xem hướng dẫn chi tiết tại [EMAIL_SETUP_GUIDE.md](./EMAIL_SETUP_GUIDE.md)
 ### 4. Build & Run
 #### Using Maven
 ```bash
@@ -172,22 +167,19 @@ docker run -p 8080:8080 --env-file .env ecommerce-backend
 ### 5. Access Application
 - **API Base URL:** http://localhost:8080
 - **Swagger UI:** http://localhost:8080/swagger-ui.html
-- **API Docs:** http://localhost:8080/api-docs
-- **Health Check:** http://localhost:8080/actuator/health
 ---
 ## API Documentation
 ### Default Accounts (Auto-created on startup)
 **Admin Account:**
 ```
 Email: admin@ecommerce.com
-Password: Admin@123 (hoặc giá trị trong ADMIN_PASSWORD)
+Password: Admin@123
 ```
 **Customer Account:**
 ```
 Email: customer@ecommerce.com
-Password: Customer@123 (hoặc giá trị trong CUSTOMER_PASSWORD)
+Password: Customer@123
 ```
-> **Security Note:** Đổi mật khẩu ngay sau lần đăng nhập đầu tiên trong production!
 ### Postman Collection
 Import file `Ecommerce_API_Collection.postman_collection.json` vào Postman để test APIs.
 **Environment:**
@@ -216,7 +208,6 @@ GET    /api/cart                          # Get current cart
 POST   /api/cart/items                    # Add item to cart
 PUT    /api/cart/items/{itemId}           # Update item quantity
 DELETE /api/cart/items/{itemId}           # Remove item from cart
-Header Required: Session-Id: {your-session-id}
 ```
 #### Orders
 ```http
@@ -240,8 +231,6 @@ GET    /api/admin/orders                  # List all orders
 GET    /api/admin/orders?status={status}  # Filter by status
 GET    /api/admin/orders/{orderId}        # Get order details
 POST   /api/admin/orders/{orderId}/update-status  # Update order status
-Header Required: Authorization: Bearer {admin-jwt-token}
-                 Session-Id: {session-id}
 ```
 **Update Status Request:**
 ```json
@@ -274,47 +263,187 @@ Header Required: Authorization: Bearer {admin-jwt-token}
 | **Build** | Maven 3.8+ | Dependency & build management |
 | **Containerization** | Docker | Deployment packaging |
 ### Database Schema (ERD)
+
+#### 📊 Tables Overview
+
+**1. User** - Tài khoản người dùng
 ```
-   User
- id
- email
- password
- role
- active
-  Category               Product
- id           category_id
- name          1:N     name
- description           description
- active                basePrice
-          imageUrl
-                         active
-                                1:N
-                     ProductVariant            InventoryReserv.
-                     id               variant_id
-                     product_id                session_id
-                     sku                       quantity
-                     size                      expires_at
-                     color
-                     price
-                     stockQuantity
-                     reservedQty
-                              N:M
-    Cart              OrderItem             Order
- id                  id                   id
- session_id          order_id      orderNumber
- user_id             variant_id           tracking
-        quantity             status
-                      price                total
-        1:N           subtotal             payment
-                             customer*
-                               shipping*
-  CartItem                                  notes
-                               created_at
- id
- cart_id
- variant_id
- quantity
+users
+├── id (UUID, PK)
+├── email (String, Unique)
+├── password (String, BCrypt)
+├── name (String)
+├── role (Enum: ADMIN, CUSTOMER)
+├── active (Boolean)
+├── created_at (Timestamp)
+└── updated_at (Timestamp)
 ```
+
+**2. Category** - Danh mục sản phẩm
+```
+categories
+├── id (UUID, PK)
+├── name (String, Unique)
+├── description (String)
+├── active (Boolean)
+├── created_at (Timestamp)
+└── updated_at (Timestamp)
+```
+
+**3. Product** - Sản phẩm chính
+```
+products
+├── id (UUID, PK)
+├── category_id (UUID, FK → categories)
+├── name (String)
+├── description (Text)
+├── base_price (BigDecimal)
+├── image_url (String)
+├── active (Boolean)
+├── created_at (Timestamp)
+└── updated_at (Timestamp)
+```
+
+**4. ProductVariant** - Biến thể sản phẩm (Size/Color)
+```
+product_variants
+├── id (UUID, PK)
+├── product_id (UUID, FK → products)
+├── sku (String, Unique)
+├── size (Enum: S, M, L, XL)
+├── color (Enum: BLACK, WHITE, RED, BLUE...)
+├── price (BigDecimal)
+├── stock_quantity (Integer)
+├── reserved_quantity (Integer) ⚡ Critical for inventory
+├── created_at (Timestamp)
+└── updated_at (Timestamp)
+```
+
+**5. InventoryReservation** - Giữ hàng tạm thời
+```
+inventory_reservations
+├── id (UUID, PK)
+├── product_variant_id (UUID, FK → product_variants)
+├── session_id (String)
+├── quantity (Integer)
+├── expires_at (Timestamp) ⏰ 10-15 minutes
+├── created_at (Timestamp)
+└── updated_at (Timestamp)
+```
+
+**6. Cart** - Giỏ hàng
+```
+carts
+├── id (UUID, PK)
+├── session_id (String, Unique) 🔑 Guest support
+├── user_id (UUID, FK → users, Nullable)
+├── created_at (Timestamp)
+└── updated_at (Timestamp)
+```
+
+**7. CartItem** - Chi tiết giỏ hàng
+```
+cart_items
+├── id (UUID, PK)
+├── cart_id (UUID, FK → carts)
+├── product_variant_id (UUID, FK → product_variants)
+├── quantity (Integer)
+├── created_at (Timestamp)
+└── updated_at (Timestamp)
+```
+
+**8. Order** - Đơn hàng
+```
+orders
+├── id (UUID, PK)
+├── order_number (String, Unique) e.g., "ORD-20260121-001"
+├── tracking_code (String, Unique) e.g., "HHB-ABC123XYZ"
+├── user_id (UUID, FK → users, Nullable) 🔑 Guest support
+├── status (Enum: PENDING_PAYMENT, CONFIRMED, PAID...)
+├── total_amount (BigDecimal)
+├── payment_method (Enum: COD, BANK_TRANSFER, SEPAY)
+├── customer_name (String)
+├── customer_email (String)
+├── customer_phone (String)
+├── shipping_address (Text)
+├── notes (Text, Nullable)
+├── created_at (Timestamp)
+└── updated_at (Timestamp)
+```
+
+**9. OrderItem** - Chi tiết đơn hàng
+```
+order_items
+├── id (UUID, PK)
+├── order_id (UUID, FK → orders)
+├── product_variant_id (UUID, FK → product_variants)
+├── quantity (Integer)
+├── price (BigDecimal) 💡 Snapshot price at time of order
+├── subtotal (BigDecimal)
+├── created_at (Timestamp)
+└── updated_at (Timestamp)
+```
+
+---
+
+#### 🔗 Relationships
+
+```
+Category ──────1:N──────> Product
+                             │
+                             1:N
+                             │
+                             ▼
+                      ProductVariant ◄───1:N─── InventoryReservation
+                             │
+                             │ (Referenced by)
+                             │
+              ┌──────────────┼──────────────┐
+              │                             │
+              ▼                             ▼
+         CartItem                      OrderItem
+              │                             │
+              │                             │
+         Cart (1:N)                    Order (1:N)
+              │                             │
+              │ (Optional)                  │ (Optional)
+              └──────> User ◄───────────────┘
+```
+
+#### 📝 Key Relationships Explained
+
+1. **Category → Product** (1:N)
+   - Một category có nhiều products
+
+2. **Product → ProductVariant** (1:N)
+   - Một product có nhiều variants (size/color combinations)
+
+3. **ProductVariant → InventoryReservation** (1:N)
+   - Một variant có nhiều reservations (từ nhiều sessions)
+
+4. **Cart → CartItem** (1:N)
+   - Một cart chứa nhiều cart items
+
+5. **CartItem → ProductVariant** (N:1)
+   - Mỗi cart item reference đến một variant cụ thể
+
+6. **Order → OrderItem** (1:N)
+   - Một order chứa nhiều order items
+
+7. **OrderItem → ProductVariant** (N:1)
+   - Mỗi order item reference đến một variant (snapshot)
+
+8. **User ← Cart/Order** (1:N, Optional)
+   - User có thể có nhiều carts và orders
+   - **Nullable** để support guest checkout
+
+#### 🎯 Important Notes
+
+- **Session-based Cart:** `Cart.session_id` cho phép guest shopping
+- **Inventory Reservation:** `reserved_quantity` đảm bảo stock accuracy
+- **Price Snapshot:** `OrderItem.price` lưu giá tại thời điểm đặt hàng
+- **Tracking Code:** `Order.tracking_code` cho public tracking
+- **UUID Primary Keys:** Tất cả tables dùng UUID (better security)
 ### Key Design Patterns
 1. **Layered Architecture**
    ```
@@ -411,7 +540,6 @@ Hệ thống email sử dụng **Thymeleaf HTML templates** với responsive des
 - Order item details with images
 - Professional styling
 ### Configuration
-Chi tiết setup: [EMAIL_SETUP_GUIDE.md](./EMAIL_SETUP_GUIDE.md) (nếu có)
 **Quick Gmail Setup:**
 1. Tạo Gmail App Password:
    - Truy cập: https://myaccount.google.com/apppasswords
@@ -660,116 +788,171 @@ curl -X POST http://localhost:8080/api/admin/orders/{orderId}/update-status \
 **Note:** Customer sẽ tự động nhận email khi admin update status.
 ---
 ## Project Structure
+
+### Tổng Quan Cấu Trúc
 ```
 Ecommerce/
- src/
-    main/
-       java/fpt/haidd69/ecommerce/
-          config/              # Configuration classes
-             AsyncConfig.java
-             CacheConfig.java
-             CorsConfig.java
-             JwtFilter.java
-             OpenApiConfig.java
-             SecurityConfig.java
-          constants/           # Application constants
-             AppConstants.java
-             ErrorMessages.java
-          controllers/         # REST API endpoints
-             AdminController.java
-             AuthController.java
-             CartController.java
-             OrderController.java
-             ProductController.java
-          dto/                 # Data Transfer Objects
-             auth/
-             cart/
-             common/
-             order/
-             product/
-          entities/            # JPA Entities
-             BaseEntity.java
-             Cart.java
-             CartItem.java
-             Category.java
-             InventoryReservation.java
-             Order.java
-             OrderItem.java
-             Product.java
-             ProductVariant.java
-             User.java
-          enums/               # Enumerations
-             Color.java
-             OrderStatus.java
-             PaymentMethod.java
-             Role.java
-             Size.java
-          exceptions/          # Custom exceptions
-             GlobalExceptionHandler.java
-             InsufficientStockException.java
-             InvalidOrderStatusException.java
-             ResourceNotFoundException.java
-          mappers/             # MapStruct mappers
-             CartMapper.java
-             OrderMapper.java
-             ProductMapper.java
-             UserMapper.java
-          repositories/        # JPA Repositories
-             CartRepository.java
-             CategoryRepository.java
-             InventoryReservationRepository.java
-             OrderRepository.java
-             ProductRepository.java
-             ProductVariantRepository.java
-             UserRepository.java
-          services/            # Business logic
-              impl/            # Service implementations
-                 AuthServiceImpl.java
-                 CartServiceImpl.java
-                 CustomUserDetailsService.java
-                 EmailServiceImpl.java
-                 InventoryServiceImpl.java
-                 OrderServiceImpl.java
-                 ProductServiceImpl.java
-                 TokenServiceImpl.java
-              AuthService.java
-              CartService.java
-              EmailService.java
-              InventoryService.java
-              OrderService.java
-              ProductService.java
-              TokenService.java
-       resources/
-           templates/
-              emails/          # Email templates
-                  order-confirmation.html
-                  order-status-update.html
-                  payment-confirmation.html
-           application.properties
-    test/
-        java/fpt/haidd69/ecommerce/
-            services/impl/       # Unit tests
-               AuthServiceImplTest.java
-               CartServiceImplTest.java
-               CustomUserDetailsServiceTest.java
-               EmailServiceImplTest.java
-               InventoryServiceImplTest.java
-               OrderServiceImplTest.java
-               ProductServiceImplTest.java
-               TokenServiceImplTest.java
-            EcommerceApplicationTests.java
- target/                          # Build output
- .env                             # Environment variables (gitignored)
- .gitignore
- docker-compose.yml               # PostgreSQL setup
- Dockerfile
- pom.xml                          # Maven configuration
- README.md
- TECHNICAL_REPORT.md              # Detailed technical documentation
- Ecommerce.postman_collection.json
- Ecommerce.postman_environment.json
+├── src/
+│   ├── main/
+│   │   ├── java/fpt/haidd69/ecommerce/     # Source code chính
+│   │   └── resources/                       # Resources & configs
+│   └── test/                                # Unit tests
+├── target/                                  # Build output (auto-generated)
+├── docker-compose.yml                       # PostgreSQL container setup
+├── Dockerfile                               # App containerization
+├── pom.xml                                  # Maven dependencies
+├── .env                                     # Environment variables (gitignored)
+├── README.md                                # Documentation
+├── TECHNICAL_REPORT.md                      # Technical details
+├── Ecommerce.postman_collection.json        # API testing
+└── Ecommerce.postman_environment.json       # Postman environment
 ```
-### Package Organization
+
+### Java Source Code Structure (`src/main/java/fpt/haidd69/ecommerce/`)
+
+#### 1️. **config/** - Cấu hình ứng dụng
+```
+config/
+├── AsyncConfig.java          # Async processing configuration
+├── CacheConfig.java          # Caffeine cache configuration
+├── CorsConfig.java           # Cross-Origin Resource Sharing
+├── DataInitializer.java      # Auto-seed sample data on startup
+├── JwtFilter.java            # JWT authentication filter
+├── OpenAPIConfig.java        # Swagger/OpenAPI documentation
+└── SecurityConfig.java       # Spring Security configuration
+```
+
+#### 2️. **constants/** - Hằng số & thông báo lỗi
+```
+constants/
+├── AppConstants.java         # Application-wide constants
+└── ErrorCodes.java           # Error codes & messages
+```
+
+#### 3️. **controllers/** - REST API Endpoints
+```
+controllers/
+├── AdminController.java      # Admin order management APIs
+├── AuthController.java       # Login/Register/Logout
+├── CartController.java       # Shopping cart operations
+├── OrderController.java      # Order creation & tracking
+└── ProductController.java    # Product catalog browsing
+```
+
+#### 4️. **dto/** - Data Transfer Objects (Request/Response)
+```
+dto/
+├── auth/                     # Authentication DTOs
+│   ├── LoginRequest.java
+│   ├── LoginResponse.java
+│   └── RegisterRequest.java
+├── cart/                     # Shopping cart DTOs
+│   ├── AddToCartRequest.java
+│   ├── CartResponse.java
+│   └── UpdateCartItemRequest.java
+├── common/                   # Shared DTOs
+│   ├── ApiResponse.java
+│   └── PagedResponse.java
+├── order/                    # Order DTOs
+│   ├── CreateOrderRequest.java
+│   ├── OrderResponse.java
+│   └── UpdateOrderRequest.java
+└── product/                  # Product DTOs
+    ├── ProductResponse.java
+    ├── ProductDetailResponse.java
+    └── ProductVariantResponse.java
+```
+
+#### 5️. **entities/** - JPA Database Entities
+```
+entities/
+├── BaseEntity.java           # Base class (id, createdAt, updatedAt)
+├── Cart.java                 # Shopping cart
+├── CartItem.java             # Cart line items
+├── Category.java             # Product categories
+├── InventoryReservation.java # Stock reservation tracking
+├── Order.java                # Customer orders
+├── OrderItem.java            # Order line items
+├── Product.java              # Product master data
+├── ProductVariant.java       # Size/Color variations
+└── User.java                 # User accounts
+```
+
+#### 6️. **enums/** - Type-safe Constants
+```
+enums/
+├── Color.java                # Product colors (BLACK, WHITE, RED, etc.)
+├── OrderStatus.java          # Order lifecycle states
+├── PaymentMethod.java        # COD, BANK_TRANSFER, SEPAY
+├── Role.java                 # ADMIN, CUSTOMER
+└── Size.java                 # S, M, L, XL
+```
+
+#### 7️. **exceptions/** - Error Handling
+```
+exceptions/
+├── GlobalExceptionHandler.java        # Centralized error handler
+├── InsufficientStockException.java    # Out of stock error
+├── InvalidOrderStatusException.java   # Invalid status transition
+└── ResourceNotFoundException.java     # 404 errors
+```
+
+#### 8️. **mappers/** - Entity ↔ DTO Mapping
+```
+mappers/
+├── CartMapper.java           # Cart entity ↔ CartResponse
+├── OrderMapper.java          # Order entity ↔ OrderResponse
+├── ProductMapper.java        # Product entity ↔ ProductResponse
+└── UserMapper.java           # User entity ↔ UserResponse
+```
+*Sử dụng MapStruct - compile-time code generation*
+
+#### 9. **repositories/** - Data Access Layer
+```
+repositories/
+├── CartRepository.java
+├── CategoryRepository.java
+├── InventoryReservationRepository.java
+├── OrderRepository.java
+├── ProductRepository.java
+├── ProductVariantRepository.java
+└── UserRepository.java
+```
+*Spring Data JPA - auto-implementation của CRUD operations*
+
+#### 10. **services/** - Business Logic Layer
+```
+services/
+├── impl/                     # Service implementations
+│   ├── AuthServiceImpl.java
+│   ├── CartServiceImpl.java
+│   ├── CustomUserDetailsService.java
+│   ├── EmailServiceImpl.java
+│   ├── InventoryServiceImpl.java
+│   ├── OrderServiceImpl.java
+│   ├── ProductServiceImpl.java
+│   └── TokenServiceImpl.java
+├── AuthService.java          # Authentication & registration
+├── CartService.java          # Shopping cart operations
+├── EmailService.java         # Email notifications
+├── InventoryService.java     # Stock reservation & release
+├── OrderService.java         # Order processing
+├── ProductService.java       # Product catalog
+└── TokenService.java         # JWT token management
+```
+
+### Resources Structure (`src/main/resources/`)
+```
+resources/
+├── templates/
+│   └── emails/               # Thymeleaf HTML email templates
+│       ├── order-confirmation.html
+│       ├── order-status-update.html
+│       └── payment-confirmation.html
+└── application.properties    # Spring Boot configuration
+---
+
+### Package Organization Summary
 | Package | Purpose |
 |---------|---------|
 | `config` | Spring configuration, Security, JWT, CORS, OpenAPI |
