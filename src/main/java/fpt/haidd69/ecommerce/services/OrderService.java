@@ -14,6 +14,8 @@ public interface OrderService {
 
     OrderResponse getOrderByTrackingCode(String trackingCode);
 
+    OrderResponse getOrderById(UUID orderId);
+
     Page<OrderResponse> getAllOrders(int page, int size);
 
     Page<OrderResponse> getOrdersByStatus(OrderStatus status, int page, int size);
@@ -21,6 +23,8 @@ public interface OrderService {
     OrderResponse updateOrderStatus(UUID orderId, String newStatus);
 
     OrderResponse confirmPayment(UUID orderId, String sessionId);
+
+    OrderResponse cancelOrder(UUID orderId, String sessionId);
 
     void cancelExpiredPendingOrders();
 }

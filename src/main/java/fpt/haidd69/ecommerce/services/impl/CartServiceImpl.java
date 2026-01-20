@@ -67,10 +67,15 @@ public class CartServiceImpl implements CartService {
                     });
         } else {
             // Guest user: use session-based cart
-            return cartRepository.findBySessionId(sessionId)
+            // Generate new sessionId if not provided
+            String effectiveSessionId = (sessionId != null && !sessionId.trim().isEmpty())
+                    ? sessionId
+                    : UUID.randomUUID().toString();
+
+            return cartRepository.findBySessionId(effectiveSessionId)
                     .orElseGet(() -> {
                         Cart newCart = new Cart();
-                        newCart.setSessionId(sessionId);
+                        newCart.setSessionId(effectiveSessionId);
                         return cartRepository.save(newCart);
                     });
         }
@@ -157,13 +162,5 @@ public class CartServiceImpl implements CartService {
 
         return cartMapper.toCartResponse(cartRepository.findById(cart.getId())
                 .orElseThrow(() -> new ResourceNotFoundException(AppConstants.CART_NOT_FOUND)));
-    }
-
-    @Override
-    public void clearCart(String sessionId) {
-        cartRepository.findBySessionId(sessionId).ifPresent(cart -> {
-            cart.getItems().clear();
-            cartRepository.save(cart);
-        });
     }
 }

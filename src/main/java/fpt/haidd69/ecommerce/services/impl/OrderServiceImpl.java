@@ -28,18 +28,21 @@ import fpt.haidd69.ecommerce.mappers.OrderMapper;
 import fpt.haidd69.ecommerce.repositories.CartRepository;
 import fpt.haidd69.ecommerce.repositories.OrderRepository;
 import fpt.haidd69.ecommerce.repositories.UserRepository;
-import fpt.haidd69.ecommerce.services.CartService;
 import fpt.haidd69.ecommerce.services.EmailService;
 import fpt.haidd69.ecommerce.services.InventoryService;
 import fpt.haidd69.ecommerce.services.OrderService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Service
 @Transactional
 public class OrderServiceImpl implements OrderService {
 
+    @PersistenceContext
+    private EntityManager entityManager;
+
     private final OrderRepository orderRepository;
     private final CartRepository cartRepository;
-    private final CartService cartService;
     private final InventoryService inventoryService;
     private final EmailService emailService;
     private final UserRepository userRepository;
@@ -47,14 +50,12 @@ public class OrderServiceImpl implements OrderService {
 
     public OrderServiceImpl(OrderRepository orderRepository,
             CartRepository cartRepository,
-            CartService cartService,
             InventoryService inventoryService,
             EmailService emailService,
             UserRepository userRepository,
             OrderMapper orderMapper) {
         this.orderRepository = orderRepository;
         this.cartRepository = cartRepository;
-        this.cartService = cartService;
         this.inventoryService = inventoryService;
         this.emailService = emailService;
         this.userRepository = userRepository;
@@ -127,20 +128,17 @@ public class OrderServiceImpl implements OrderService {
 
         order.setTotalAmount(totalAmount);
 
-        // Set initial status based on payment method
-        if (order.getPaymentMethod() == PaymentMethod.COD) {
-            // COD orders are automatically confirmed
-            order.setStatus(OrderStatus.CONFIRMED);
-            inventoryService.confirmReservation(sessionId);
-        } else {
-            // BANK_TRANSFER and SEPAY require payment confirmation
-            order.setStatus(OrderStatus.PENDING_PAYMENT);
-        }
+        // Set initial status - all orders start as PENDING_PAYMENT
+        order.setStatus(OrderStatus.PENDING_PAYMENT);
 
         Order savedOrder = orderRepository.save(order);
 
-        // Clear cart
-        cartService.clearCart(sessionId);
+        // Flush to ensure createdAt is set by Hibernate before sending email
+        entityManager.flush();
+
+        // Clear cart after order is created
+        cart.getItems().clear();
+        cartRepository.save(cart);
 
         // Send confirmation email
         emailService.sendOrderConfirmation(savedOrder);
@@ -152,6 +150,14 @@ public class OrderServiceImpl implements OrderService {
     @Override
     public OrderResponse getOrderByTrackingCode(String trackingCode) {
         Order order = orderRepository.findByTrackingCode(trackingCode)
+                .orElseThrow(() -> new ResourceNotFoundException(AppConstants.ORDER_NOT_FOUND));
+        return orderMapper.toOrderResponse(order);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public OrderResponse getOrderById(UUID orderId) {
+        Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException(AppConstants.ORDER_NOT_FOUND));
         return orderMapper.toOrderResponse(order);
     }
@@ -205,6 +211,38 @@ public class OrderServiceImpl implements OrderService {
         Order updatedOrder = orderRepository.save(order);
 
         emailService.sendPaymentConfirmation(updatedOrder);
+
+        return orderMapper.toOrderResponse(updatedOrder);
+    }
+
+    @Override
+    public OrderResponse cancelOrder(UUID orderId, String sessionId) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException(AppConstants.ORDER_NOT_FOUND));
+
+        if (order.getStatus() == OrderStatus.CANCELLED) {
+            throw new InvalidOrderStatusException("Order is already cancelled");
+        }
+
+        if (order.getStatus() == OrderStatus.DELIVERED) {
+            throw new InvalidOrderStatusException("Cannot cancel delivered order");
+        }
+
+        order.setStatus(OrderStatus.CANCELLED);
+
+        // Release inventory reservation if it exists
+        if (sessionId != null) {
+            try {
+                inventoryService.releaseReservation(sessionId);
+            } catch (Exception e) {
+                // Reservation might already be released, that's ok
+            }
+        }
+
+        Order updatedOrder = orderRepository.save(order);
+
+        // Send order status update email (cancelled)
+        emailService.sendOrderStatusUpdate(updatedOrder);
 
         return orderMapper.toOrderResponse(updatedOrder);
     }

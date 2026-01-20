@@ -15,7 +15,6 @@ import fpt.haidd69.ecommerce.dto.product.ProductResponse;
 import fpt.haidd69.ecommerce.dto.product.ProductVariantResponse;
 import fpt.haidd69.ecommerce.entities.Product;
 import fpt.haidd69.ecommerce.entities.ProductVariant;
-import fpt.haidd69.ecommerce.enums.ProductCategory;
 import fpt.haidd69.ecommerce.exceptions.ResourceNotFoundException;
 import fpt.haidd69.ecommerce.mappers.ProductMapper;
 import fpt.haidd69.ecommerce.repositories.ProductRepository;
@@ -46,13 +45,13 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public Page<ProductResponse> getProductsByFilters(ProductCategory category,
+    public Page<ProductResponse> getProductsByFilters(UUID categoryId,
             BigDecimal minPrice,
             BigDecimal maxPrice,
             int page,
             int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        Page<Product> products = productRepository.findByFilters(category, minPrice, maxPrice, pageable);
+        Page<Product> products = productRepository.findByFilters(categoryId, minPrice, maxPrice, pageable);
         return products.map(productMapper::toProductResponse);
     }
 

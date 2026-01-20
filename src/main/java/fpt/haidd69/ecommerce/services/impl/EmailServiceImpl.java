@@ -38,10 +38,10 @@ public class EmailServiceImpl implements EmailService {
     @Value("${app.tracking-path:/api/orders/track/}")
     private String trackingPath;
 
-    @Value("${app.email.from:noreply@hunghypebeast.com}")
+    @Value("${app.email.from:haivipmc2442@gmail.com}")
     private String fromEmail;
 
-    @Value("${app.email.from-name:Hung Hypebeast Store}")
+    @Value("${app.email.from-name:HaiDuc}")
     private String fromName;
 
     public EmailServiceImpl(JavaMailSender mailSender, SpringTemplateEngine templateEngine) {
@@ -207,10 +207,6 @@ public class EmailServiceImpl implements EmailService {
         return switch (method) {
             case "COD" ->
                 "Thanh toán khi nhận hàng (COD)";
-            case "BANK_TRANSFER" ->
-                "Chuyển khoản ngân hàng";
-            case "SEPAY" ->
-                "Thanh toán SePay";
             default ->
                 method;
         };

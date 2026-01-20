@@ -13,6 +13,4 @@ public interface CartService {
     CartResponse updateCartItem(String sessionId, UUID itemId, Integer quantity);
 
     CartResponse removeFromCart(String sessionId, UUID itemId);
-
-    void clearCart(String sessionId);
 }
