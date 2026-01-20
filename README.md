@@ -264,7 +264,7 @@ POST   /api/admin/orders/{orderId}/update-status  # Update order status
 | **Containerization** | Docker | Deployment packaging |
 ### Database Schema (ERD)
 
-#### 📊 Tables Overview
+#### Tables Overview
 
 **1. User** - Tài khoản người dùng
 ```
@@ -314,7 +314,7 @@ product_variants
 ├── color (Enum: BLACK, WHITE, RED, BLUE...)
 ├── price (BigDecimal)
 ├── stock_quantity (Integer)
-├── reserved_quantity (Integer) ⚡ Critical for inventory
+├── reserved_quantity (Integer) Critical for inventory
 ├── created_at (Timestamp)
 └── updated_at (Timestamp)
 ```
@@ -326,7 +326,7 @@ inventory_reservations
 ├── product_variant_id (UUID, FK → product_variants)
 ├── session_id (String)
 ├── quantity (Integer)
-├── expires_at (Timestamp) ⏰ 10-15 minutes
+├── expires_at (Timestamp) 10-15 minutes
 ├── created_at (Timestamp)
 └── updated_at (Timestamp)
 ```
@@ -335,7 +335,7 @@ inventory_reservations
 ```
 carts
 ├── id (UUID, PK)
-├── session_id (String, Unique) 🔑 Guest support
+├── session_id (String, Unique) Guest support
 ├── user_id (UUID, FK → users, Nullable)
 ├── created_at (Timestamp)
 └── updated_at (Timestamp)
@@ -358,7 +358,7 @@ orders
 ├── id (UUID, PK)
 ├── order_number (String, Unique) e.g., "ORD-20260121-001"
 ├── tracking_code (String, Unique) e.g., "HHB-ABC123XYZ"
-├── user_id (UUID, FK → users, Nullable) 🔑 Guest support
+├── user_id (UUID, FK → users, Nullable) Guest support
 ├── status (Enum: PENDING_PAYMENT, CONFIRMED, PAID...)
 ├── total_amount (BigDecimal)
 ├── payment_method (Enum: COD, BANK_TRANSFER, SEPAY)
@@ -378,7 +378,7 @@ order_items
 ├── order_id (UUID, FK → orders)
 ├── product_variant_id (UUID, FK → product_variants)
 ├── quantity (Integer)
-├── price (BigDecimal) 💡 Snapshot price at time of order
+├── price (BigDecimal) Snapshot price at time of order
 ├── subtotal (BigDecimal)
 ├── created_at (Timestamp)
 └── updated_at (Timestamp)
@@ -386,7 +386,7 @@ order_items
 
 ---
 
-#### 🔗 Relationships
+#### Relationships
 
 ```
 Category ──────1:N──────> Product
@@ -410,7 +410,7 @@ Category ──────1:N──────> Product
               └──────> User ◄───────────────┘
 ```
 
-#### 📝 Key Relationships Explained
+#### Key Relationships Explained
 
 1. **Category → Product** (1:N)
    - Một category có nhiều products
@@ -437,7 +437,7 @@ Category ──────1:N──────> Product
    - User có thể có nhiều carts và orders
    - **Nullable** để support guest checkout
 
-#### 🎯 Important Notes
+#### Important Notes
 
 - **Session-based Cart:** `Cart.session_id` cho phép guest shopping
 - **Inventory Reservation:** `reserved_quantity` đảm bảo stock accuracy
