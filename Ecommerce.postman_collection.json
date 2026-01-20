@@ -21,7 +21,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"email\": \"customer@example.com\",\n  \"password\": \"password123\",\n  \"fullName\": \"John Doe\",\n  \"phoneNumber\": \"0123456789\"\n}"
+							"raw": "{\n  \"email\": \"customer@example.com\",\n  \"password\": \"password123\",\n  \"fullName\": \"John Doe\",\n  \"phone\": \"0123456789\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/auth/register",
@@ -39,7 +39,7 @@
 					"response": []
 				},
 				{
-					"name": "Login",
+					"name": "Login Admin",
 					"event": [
 						{
 							"listen": "test",
@@ -48,8 +48,9 @@
 									"if (pm.response.code === 200) {",
 									"    var jsonData = pm.response.json();",
 									"    if (jsonData.data && jsonData.data.token) {",
+									"        pm.environment.set(\"admin_token\", jsonData.data.token);",
 									"        pm.environment.set(\"jwt_token\", jsonData.data.token);",
-									"        console.log(\"JWT Token saved:\", jsonData.data.token);",
+									"        console.log(\"Admin JWT Token saved:\", jsonData.data.token);",
 									"    }",
 									"}"
 								],
@@ -67,7 +68,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n  \"email\": \"admin@ecommerce.com\",\n  \"password\": \"ChangeMe123!@#\"\n}"
+							"raw": "{\n  \"email\": \"admin@ecommerce.com\",\n  \"password\": \"Admin@123\"\n}"
 						},
 						"url": {
 							"raw": "{{base_url}}/api/auth/login",
@@ -80,7 +81,313 @@
 								"login"
 							]
 						},
-						"description": "Login and get JWT token"
+						"description": "Login as ADMIN and get JWT token"
+					},
+					"response": []
+				},
+				{
+					"name": "Login Customer",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.token) {",
+									"        pm.environment.set(\"customer_token\", jsonData.data.token);",
+									"        console.log(\"Customer JWT Token saved:\", jsonData.data.token);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"customer@ecommerce.com\",\n  \"password\": \"Customer@123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						},
+						"description": "Login as CUSTOMER and get JWT token"
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "GUEST USER FLOW",
+			"description": "Complete flow for guest users who don't need to register/login",
+			"item": [
+				{
+					"name": "Browse Products",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/products?page=0&size=20&sortBy=createdAt",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"products"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								},
+								{
+									"key": "sortBy",
+									"value": "createdAt"
+								}
+							]
+						},
+						"description": "Guest user browses products - NO LOGIN REQUIRED"
+					},
+					"response": []
+				},
+				{
+					"name": "View Product Detail",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.variants && jsonData.data.variants.length > 0) {",
+									"        pm.environment.set(\"variant_id\", jsonData.data.variants[0].id);",
+									"        console.log(\"Variant ID saved:\", jsonData.data.variants[0].id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/products/{{product_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"{{product_id}}"
+							]
+						},
+						"description": "View product details and variants - NO LOGIN REQUIRED"
+					},
+					"response": []
+				},
+				{
+					"name": "Add to Cart (Guest)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.items && jsonData.data.items.length > 0) {",
+									"        pm.environment.set(\"cart_item_id\", jsonData.data.items[0].id);",
+									"        console.log(\"Cart Item ID saved:\", jsonData.data.items[0].id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Session-Id",
+								"value": "{{session_id_guest}}",
+								"type": "text",
+								"description": "Guest session - just a UUID, no login needed"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productVariantId\": \"{{variant_id}}\",\n  \"quantity\": 2\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/cart/items",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cart",
+								"items"
+							]
+						},
+						"description": "Guest adds product to cart - ONLY Session-Id needed, NO JWT TOKEN"
+					},
+					"response": []
+				},
+				{
+					"name": "View Cart (Guest)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Session-Id",
+								"value": "{{session_id_guest}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/cart",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cart"
+							]
+						},
+						"description": "Guest views cart - NO LOGIN REQUIRED"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Cart Quantity (Guest)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Session-Id",
+								"value": "{{session_id_guest}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/cart/items/{{cart_item_id}}?quantity=3",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cart",
+								"items",
+								"{{cart_item_id}}"
+							],
+							"query": [
+								{
+									"key": "quantity",
+									"value": "3"
+								}
+							]
+						},
+						"description": "Guest updates cart item quantity - NO LOGIN REQUIRED"
+					},
+					"response": []
+				},
+				{
+					"name": "Checkout (Guest - COD)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data) {",
+									"        pm.environment.set(\"tracking_code\", jsonData.data.trackingCode);",
+									"        pm.environment.set(\"order_id\", jsonData.data.id);",
+									"        console.log(\"Order created! Tracking Code:\", jsonData.data.trackingCode);",
+									"        console.log(\"Order ID:\", jsonData.data.id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Session-Id",
+								"value": "{{session_id_guest}}",
+								"type": "text",
+								"description": "Guest session ID"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customerEmail\": \"guest.customer@example.com\",\n  \"customerName\": \"Nguyễn Văn Guest\",\n  \"customerPhone\": \"0987654321\",\n  \"shippingAddress\": \"456 Lê Lợi, Quận 1, TP.HCM\",\n  \"paymentMethod\": \"COD\",\n  \"notes\": \"Giao hàng giờ hành chính, gọi trước 30 phút\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/orders",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"orders"
+							]
+						},
+						"description": "GUEST CHECKOUT - Không cần đăng nhập!\n\nGuest user chỉ cần:\n- Session-Id header\n- Thông tin giao hàng\n- Chọn COD payment\n\nSau khi đặt hàng thành công:\n- Nhận tracking code\n- Nhận email xác nhận"
+					},
+					"response": []
+				},
+				{
+					"name": "Track Order (Guest)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/orders/track/{{tracking_code}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"orders",
+								"track",
+								"{{tracking_code}}"
+							]
+						},
+						"description": "Guest tracks order using tracking code - NO LOGIN REQUIRED!\n\nTracking code được gửi qua email sau khi đặt hàng."
 					},
 					"response": []
 				}
@@ -91,6 +398,23 @@
 			"item": [
 				{
 					"name": "Get All Products",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.content && jsonData.data.content.length > 0) {",
+									"        pm.environment.set(\"product_id\", jsonData.data.content[0].id);",
+									"        console.log(\"Product ID saved:\", jsonData.data.content[0].id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -193,7 +517,8 @@
 			]
 		},
 		{
-			"name": "Cart",
+			"name": "Cart (Authenticated User)",
+			"description": "Cart operations for logged-in users",
 			"item": [
 				{
 					"name": "Get Cart",
@@ -343,7 +668,8 @@
 			]
 		},
 		{
-			"name": "Orders",
+			"name": "Orders (Authenticated User)",
+			"description": "Order operations for logged-in users",
 			"item": [
 				{
 					"name": "Create Order (Checkout)",
@@ -420,6 +746,7 @@
 		},
 		{
 			"name": "Admin",
+			"description": "Admin-only operations - Requires JWT authentication",
 			"item": [
 				{
 					"name": "Get All Orders",
@@ -513,22 +840,37 @@
 					"response": []
 				},
 				{
-					"name": "Update Order Status",
+					"name": "Update Order Status - Confirm Payment",
 					"request": {
 						"auth": {
 							"type": "bearer",
 							"bearer": [
 								{
 									"key": "token",
-									"value": "{{jwt_token}}",
+									"value": "{{admin_token}}",
 									"type": "string"
 								}
 							]
 						},
-						"method": "PUT",
-						"header": [],
+						"method": "POST",
+						"header": [
+							{
+								"key": "Session-Id",
+								"value": "{{session_id_guest}}",
+								"type": "text",
+								"description": "Session ID from guest order"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"action\": \"CONFIRM\"\n}"
+						},
 						"url": {
-							"raw": "{{base_url}}/api/admin/orders/{{order_id}}/status?status=CONFIRMED",
+							"raw": "{{base_url}}/api/admin/orders/{{order_id}}/update-status",
 							"host": [
 								"{{base_url}}"
 							],
@@ -537,17 +879,57 @@
 								"admin",
 								"orders",
 								"{{order_id}}",
-								"status"
-							],
-							"query": [
+								"update-status"
+							]
+						},
+						"description": "Admin confirms payment and releases inventory (Admin only)"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Order Status - Cancel Order",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
 								{
-									"key": "status",
-									"value": "CONFIRMED",
-									"description": "PENDING, CONFIRMED, PROCESSING, SHIPPED, DELIVERED, CANCELLED"
+									"key": "token",
+									"value": "{{admin_token}}",
+									"type": "string"
 								}
 							]
 						},
-						"description": "Update order status (Admin only)"
+						"method": "POST",
+						"header": [
+							{
+								"key": "Session-Id",
+								"value": "{{session_id_guest}}",
+								"type": "text",
+								"description": "Session ID from guest order"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"action\": \"CANCEL\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/admin/orders/{{order_id}}/update-status",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"admin",
+								"orders",
+								"{{order_id}}",
+								"update-status"
+							]
+						},
+						"description": "Admin cancels order and releases reserved inventory (Admin only)"
 					},
 					"response": []
 				}
