@@ -1,7 +1,5 @@
 package fpt.haidd69.ecommerce.controllers;
 
-import java.util.UUID;
-
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -51,15 +49,5 @@ public class OrderController {
 
         OrderResponse order = orderService.getOrderByTrackingCode(trackingCode);
         return ResponseEntity.ok(ApiResponse.success(order));
-    }
-
-    @Operation(summary = "Confirm payment", description = "Confirm payment for orders with BANK_TRANSFER or SEPAY method")
-    @PostMapping("/{orderId}/confirm-payment")
-    public ResponseEntity<ApiResponse<OrderResponse>> confirmPayment(
-            @PathVariable UUID orderId,
-            @RequestHeader("Session-Id") String sessionId) {
-
-        OrderResponse order = orderService.confirmPayment(orderId, sessionId);
-        return ResponseEntity.ok(ApiResponse.success(order, "Payment confirmed successfully"));
     }
 }

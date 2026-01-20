@@ -34,17 +34,19 @@ public class CartController {
         this.cartService = cartService;
     }
 
+    @io.swagger.v3.oas.annotations.Operation(summary = "Get cart", description = "Retrieve current shopping cart contents by session ID")
     @GetMapping
     public ResponseEntity<ApiResponse<CartResponse>> getCart(
-            @RequestHeader("Session-Id") String sessionId) {
+            @RequestHeader(value = "Session-Id", required = false) String sessionId) {
 
         CartResponse cart = cartService.getCart(sessionId);
         return ResponseEntity.ok(ApiResponse.success(cart));
     }
 
+    @io.swagger.v3.oas.annotations.Operation(summary = "Add to cart", description = "Add a product variant to the shopping cart with specified quantity")
     @PostMapping("/items")
     public ResponseEntity<ApiResponse<CartResponse>> addToCart(
-            @RequestHeader("Session-Id") String sessionId,
+            @RequestHeader(value = "Session-Id", required = false) String sessionId,
             @Valid @RequestBody AddToCartRequest request) {
 
         CartResponse cart = cartService.addToCart(sessionId,
@@ -54,9 +56,10 @@ public class CartController {
         return ResponseEntity.ok(ApiResponse.success(cart, "Item added to cart"));
     }
 
+    @io.swagger.v3.oas.annotations.Operation(summary = "Update cart item", description = "Update the quantity of an item in the cart")
     @PutMapping("/items/{itemId}")
     public ResponseEntity<ApiResponse<CartResponse>> updateCartItem(
-            @RequestHeader("Session-Id") String sessionId,
+            @RequestHeader(value = "Session-Id", required = false) String sessionId,
             @PathVariable UUID itemId,
             @RequestParam Integer quantity) {
 
@@ -64,20 +67,13 @@ public class CartController {
         return ResponseEntity.ok(ApiResponse.success(cart, "Cart updated"));
     }
 
+    @io.swagger.v3.oas.annotations.Operation(summary = "Remove from cart", description = "Remove a specific item from the shopping cart")
     @DeleteMapping("/items/{itemId}")
     public ResponseEntity<ApiResponse<CartResponse>> removeFromCart(
-            @RequestHeader("Session-Id") String sessionId,
+            @RequestHeader(value = "Session-Id", required = false) String sessionId,
             @PathVariable UUID itemId) {
 
         CartResponse cart = cartService.removeFromCart(sessionId, itemId);
         return ResponseEntity.ok(ApiResponse.success(cart, "Item removed from cart"));
-    }
-
-    @DeleteMapping
-    public ResponseEntity<ApiResponse<Void>> clearCart(
-            @RequestHeader("Session-Id") String sessionId) {
-
-        cartService.clearCart(sessionId);
-        return ResponseEntity.ok(ApiResponse.success(null, "Cart cleared"));
     }
 }
