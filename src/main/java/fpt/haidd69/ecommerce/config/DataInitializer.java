@@ -200,7 +200,17 @@ public class DataInitializer {
                 new Size[]{Size.M, Size.L, Size.XL, Size.XXL},
                 25);
 
-        log.info("✅ Created 10 products with multiple variants");
+        createProduct("DEMO - Last Item Test",
+                "SẢN PHẨM DEMO: Chỉ còn 1 sản phẩm cuối cùng! Test Pessimistic Lock khi 2 users cùng mua.",
+                tshirtCategory,
+                new BigDecimal("99000"),
+                "https://product.hstatic.net/200000033444/product/demo_last_item.jpg",
+                new Color[]{Color.RED},
+                new Size[]{Size.M},
+                1);
+
+        log.info("Created 11 products with multiple variants");
+        log.info("DEMO Product: 'DEMO - Last Item Test' - Stock = 1 (for Pessimistic Lock demo)");
     }
 
     private Category saveCategory(String name, String description) {

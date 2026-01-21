@@ -745,6 +745,313 @@
 			]
 		},
 		{
+			"name": "LAST ITEM PROBLEM DEMO",
+			"description": "Demo pessimistic lock: 2 users compete for the last item in stock",
+			"item": [
+				{
+					"name": "SETUP - Get Product with Low Stock",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.content && jsonData.data.content.length > 0) {",
+									"        // Find first product",
+									"        var product = jsonData.data.content[0];",
+									"        pm.environment.set('demo_product_id', product.id);",
+									"        console.log('Demo Product ID:', product.id);",
+									"        console.log('IMPORTANT: Manually set this variant stock to 1 in database!');",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/products?page=0&size=20",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"products"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0"
+								},
+								{
+									"key": "size",
+									"value": "20"
+								}
+							]
+						},
+						"description": "Step 1: Get product list and save demo_product_id. Then manually set stock to 1 in DB."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Product Details (Save Variant ID)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.variants && jsonData.data.variants.length > 0) {",
+									"        var variant = jsonData.data.variants[0];",
+									"        pm.environment.set('demo_variant_id', variant.id);",
+									"        console.log('Demo Variant ID:', variant.id);",
+									"        console.log('Available Stock:', variant.availableQuantity);",
+									"        console.log('Reserved Stock:', variant.reservedQuantity);",
+									"        if (variant.availableQuantity !== 1) {",
+									"            console.warn('WARNING: Stock is not 1! Update DB first.');",
+									"        }",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/products/{{demo_product_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"{{demo_product_id}}"
+							]
+						},
+						"description": "Step 2: Get product details and verify stock = 1"
+					},
+					"response": []
+				},
+				{
+					"name": "USER A - Add to Cart",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    console.log('USER A: Added to cart successfully!');",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.items && jsonData.data.items.length > 0) {",
+									"        pm.environment.set('demo_cart_item_a', jsonData.data.items[0].id);",
+									"    }",
+									"} else {",
+									"    console.error('USER A: Failed to add to cart!');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Session-Id",
+								"value": "{{session_id_user_a}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productVariantId\": \"{{demo_variant_id}}\",\n  \"quantity\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/cart/items",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cart",
+								"items"
+							]
+						},
+						"description": "Step 3: User A adds the last item to cart"
+					},
+					"response": []
+				},
+				{
+					"name": "USER A - Checkout (Should SUCCESS)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    console.log('USER A: Checkout SUCCESS!');",
+									"    console.log('Expected DB State:');",
+									"    console.log('   - available_quantity: 0');",
+									"    console.log('   - reserved_quantity: 1');",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data) {",
+									"        pm.environment.set('demo_order_a', jsonData.data.id);",
+									"        pm.environment.set('demo_tracking_a', jsonData.data.trackingCode);",
+									"        console.log('Order ID:', jsonData.data.id);",
+									"        console.log('Tracking Code:', jsonData.data.trackingCode);",
+									"    }",
+									"} else {",
+									"    console.error('USER A: Checkout FAILED! This should not happen!');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Session-Id",
+								"value": "{{session_id_user_a}}",
+								"type": "text"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"customerEmail\": \"userA@demo.com\",\n  \"customerName\": \"Nguyễn Văn A\",\n  \"customerPhone\": \"0987654321\",\n  \"shippingAddress\": \"123 Lê Lợi, Q1, TP.HCM\",\n  \"paymentMethod\": \"COD\",\n  \"notes\": \"Demo: User A gets the last item\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/orders",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"orders"
+							]
+						},
+						"description": "Step 4: User A checkout - Should reserve the last item (stock becomes 0)"
+					},
+					"response": []
+				},
+				{
+					"name": "USER B - Add to Cart (Should FAIL)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    console.error('USER B: Should NOT be able to add to cart!');",
+									"    console.error('PESSIMISTIC LOCK FAILED!');",
+									"} else {",
+									"    console.log('USER B: Correctly prevented from adding to cart!');",
+									"    console.log('PESSIMISTIC LOCK WORKING!');",
+									"    var jsonData = pm.response.json();",
+									"    console.log('Error:', jsonData.message);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Session-Id",
+								"value": "{{session_id_user_b}}",
+								"type": "text",
+								"description": "Different session from User A"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"productVariantId\": \"{{demo_variant_id}}\",\n  \"quantity\": 1\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/cart/items",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"cart",
+								"items"
+							]
+						},
+						"description": "Step 5: User B tries to add - Should fail with INSUFFICIENT_STOCK"
+					},
+					"response": []
+				},
+				{
+					"name": "Verify: Get Product Stock Status",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.variants && jsonData.data.variants.length > 0) {",
+									"        var variant = jsonData.data.variants[0];",
+									"        console.log('FINAL STOCK STATUS:');",
+									"        console.log('   Available:', variant.availableQuantity, '(Expected: 0)');",
+									"        console.log('   Reserved:', variant.reservedQuantity, '(Expected: 1)');",
+									"        if (variant.availableQuantity === 0 && variant.reservedQuantity === 1) {",
+									"            console.log('PESSIMISTIC LOCK VERIFIED!');",
+									"        } else {",
+									"            console.warn('Unexpected stock state!');",
+									"        }",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/products/{{demo_product_id}}",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"{{demo_product_id}}"
+							]
+						},
+						"description": "Final verification: Check stock should be available=0, reserved=1"
+					},
+					"response": []
+				}
+			]
+		},
+		{
 			"name": "Admin",
 			"description": "Admin-only operations - Requires JWT authentication",
 			"item": [
