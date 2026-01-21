@@ -29,4 +29,12 @@ public interface CartRepository extends JpaRepository<Cart, UUID> {
             + "LEFT JOIN FETCH p.category "
             + "WHERE c.user = :user")
     Optional<Cart> findByUser(@Param("user") User user);
+
+    @Query("SELECT c FROM Cart c "
+            + "LEFT JOIN FETCH c.items ci "
+            + "LEFT JOIN FETCH ci.productVariant pv "
+            + "LEFT JOIN FETCH pv.product p "
+            + "LEFT JOIN FETCH p.category "
+            + "WHERE c.id = :id")
+    Optional<Cart> findByIdWithItems(@Param("id") UUID id);
 }

@@ -22,6 +22,8 @@ import fpt.haidd69.ecommerce.repositories.CartRepository;
 import fpt.haidd69.ecommerce.repositories.ProductVariantRepository;
 import fpt.haidd69.ecommerce.repositories.UserRepository;
 import fpt.haidd69.ecommerce.services.CartService;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 
 @Service
 @Transactional
@@ -32,6 +34,9 @@ public class CartServiceImpl implements CartService {
     private final ProductVariantRepository productVariantRepository;
     private final UserRepository userRepository;
     private final CartMapper cartMapper;
+
+    @PersistenceContext
+    private EntityManager entityManager;
 
     public CartServiceImpl(CartRepository cartRepository,
             CartItemRepository cartItemRepository,
@@ -120,8 +125,14 @@ public class CartServiceImpl implements CartService {
             cartItemRepository.save(newItem);
         }
 
-        return cartMapper.toCartResponse(cartRepository.findById(cart.getId())
-                .orElseThrow(() -> new ResourceNotFoundException(AppConstants.CART_NOT_FOUND)));
+        // Flush changes to database and clear persistence context
+        entityManager.flush();
+        entityManager.clear();
+
+        // Reload cart with all items using JOIN FETCH to ensure items are loaded from database
+        Cart updatedCart = cartRepository.findByIdWithItems(cart.getId())
+                .orElseThrow(() -> new ResourceNotFoundException(AppConstants.CART_NOT_FOUND));
+        return cartMapper.toCartResponse(updatedCart);
     }
 
     @Override
