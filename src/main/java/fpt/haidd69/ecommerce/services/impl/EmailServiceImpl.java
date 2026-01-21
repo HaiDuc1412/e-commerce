@@ -38,10 +38,10 @@ public class EmailServiceImpl implements EmailService {
     @Value("${app.tracking-path:/api/orders/track/}")
     private String trackingPath;
 
-    @Value("${app.email.from:haivipmc2442@gmail.com}")
+    @Value("${app.email.from}")
     private String fromEmail;
 
-    @Value("${app.email.from-name:HaiDuc}")
+    @Value("${app.email.from-name}")
     private String fromName;
 
     public EmailServiceImpl(JavaMailSender mailSender, SpringTemplateEngine templateEngine) {
@@ -58,6 +58,7 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendOrderConfirmation(Order order) {
         try {
+            logger.debug("Starting to send order confirmation email to: {}", order.getCustomerEmail());
             String trackingUrl = baseUrl + trackingPath + order.getTrackingCode();
             String subject = "Xác nhận đơn hàng - " + order.getOrderNumber();
 
